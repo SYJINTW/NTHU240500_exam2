@@ -1,0 +1,28 @@
+BUILD/B_L4S5I_IOT01A/GCC_ARM/mbed-os/connectivity/nanostack/mbed-mesh-api/source/nd_tasklet.o: \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/mbed-mesh-api/source/nd_tasklet.c \
+ BUILD/B_L4S5I_IOT01A/GCC_ARM/mbed_config.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/sal-stack-nanostack-eventloop/nanostack-event-loop/eventOS_event_timer.h \
+ /home/syj/ee2405/mbed-os/connectivity/libraries/nanostack-libservice/mbed-client-libservice/ns_types.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/sal-stack-nanostack-eventloop/nanostack-event-loop/eventOS_event.h \
+ /home/syj/ee2405/mbed-os/connectivity/libraries/nanostack-libservice/mbed-client-libservice/ns_list.h \
+ /home/syj/ee2405/mbed-os/connectivity/libraries/nanostack-libservice/mbed-client-libservice/ns_types.h \
+ /home/syj/ee2405/mbed-os/connectivity/libraries/nanostack-libservice/mbed-client-libservice/common_functions.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/sal-stack-nanostack/nanostack/net_interface.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/sal-stack-nanostack/nanostack/platform/arm_hal_phy.h \
+ /home/syj/ee2405/mbed-os/connectivity/libraries/nanostack-libservice/mbed-client-libservice/ip6string.h \
+ /home/syj/ee2405/mbed-os/connectivity/libraries/nanostack-libservice/mbed-client-libservice/nsdynmemLIB.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/mbed-mesh-api/source/include/nd_tasklet.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/sal-stack-nanostack-eventloop/nanostack-event-loop/eventOS_event.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/mbed-mesh-api/mbed-mesh-api/mesh_interface_types.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/mbed-mesh-api/source/include/mesh_system.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/sal-stack-nanostack-eventloop/nanostack-event-loop/eventOS_scheduler.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/nanostack-hal-mbed-cmsis-rtos/ns_event_loop.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/sal-stack-nanostack/nanostack/multicast_api.h \
+ /home/syj/ee2405/mbed-os/connectivity/libraries/nanostack-libservice/mbed-client-libservice/ns_trace.h \
+ /home/syj/ee2405/mbed-os/platform/mbed-trace/include/mbed-trace/mbed_trace.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/sal-stack-nanostack/nanostack/mac_api.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/sal-stack-nanostack/nanostack/mlme.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/sal-stack-nanostack/nanostack/mac_common_defines.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/sal-stack-nanostack/nanostack/net_interface.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/sal-stack-nanostack/nanostack/mac_mcps.h \
+ /home/syj/ee2405/mbed-os/connectivity/nanostack/sal-stack-nanostack/nanostack/sw_mac.h

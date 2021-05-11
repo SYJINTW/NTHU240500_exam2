@@ -1,0 +1,22 @@
+{
+    "config": {
+    "wifi-ssid": {
+            "help": "WiFi SSID",
+            "//": "TODO: wifi name",
+            "value": "\"SYJ_TLink2\""
+    },
+    "wifi-password": {
+            "help": "WiFi Password",
+            "//": "TODO: wifi password",
+            "value": "\"44444444\""
+    }
+    },
+    "target_overrides": {
+        "B_L4S5I_IOT01A": {
+            "target.components_add": ["ism43362"],
+            "ism43362.provide-default": true,
+            "target.network-default-interface-type": "WIFI",
+            "target.macros_add" : ["MBEDTLS_SHA1_C"]
+        }
+    }
+}

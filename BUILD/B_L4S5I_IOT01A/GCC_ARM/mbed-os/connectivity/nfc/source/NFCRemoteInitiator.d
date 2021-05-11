@@ -1,0 +1,33 @@
+BUILD/B_L4S5I_IOT01A/GCC_ARM/mbed-os/connectivity/nfc/source/NFCRemoteInitiator.o: \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/source/NFCRemoteInitiator.cpp \
+ BUILD/B_L4S5I_IOT01A/GCC_ARM/mbed_config.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/include/nfc/NFCRemoteInitiator.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/include/nfc/NFCDefinitions.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/stack/nfc_errors.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/acore/acore/ac_buffer.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/include/nfc/NFCRemoteEndpoint.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/include/nfc/NFCNDEFCapable.h \
+ /home/syj/ee2405/mbed-os/platform/include/platform/Span.h \
+ /home/syj/ee2405/mbed-os/platform/include/platform/mbed_assert.h \
+ /home/syj/ee2405/mbed-os/platform/include/platform/mbed_toolchain.h \
+ /home/syj/ee2405/mbed-os/platform/include/platform/mbed_preprocessor.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/stack/ndef/ndef.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/stack/nfc_common.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/stack/nfc_errors.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/stack/platform/nfc_debug.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/acore/acore/ac_macros.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/acore/acore/ac_buffer_reader.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/acore/acore/ac_buffer_builder.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/acore/acore/ac_stream.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/acore/acore/ac_buffer.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/acore/acore/ac_buffer_reader.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/acore/acore/ac_buffer_builder.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/stack/tech/iso7816/iso7816_app.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/stack/tech/iso7816/iso7816.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/stack/transceiver/protocols.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/stack/tech/isodep/isodep_target.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/stack/transceiver/transceiver.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/stack/transceiver/protocols.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/stack/platform/nfc_transport.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/stack/platform/nfc_scheduler.h \
+ /home/syj/ee2405/mbed-os/connectivity/nfc/libraries/stack/tech/isodep/isodep.h
