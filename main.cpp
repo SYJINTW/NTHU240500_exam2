@@ -202,7 +202,7 @@ void find_angle(float* input, int length)
 }
 
 // CAPTURE mode
-void CAPTURE()
+void CAPTURE(MQTT::Client<MQTTNetwork, Countdown> *client)
 {
   // Whether we should clear the buffer next time we fetch data
   bool should_clear_buffer = false;
@@ -308,40 +308,30 @@ void CAPTURE()
       // Clear the buffer next time we read data
       should_clear_buffer = gesture_index < label_num;
 
-      
-
       // Produce an output
       if (gesture_index < label_num)
       {
-        switch (gesture_index)
-        {
+        num++;
+        find_angle(model_input->data.f, input_length);
 
-          case 0:
-            printf("%d: Ring\n", num);
-            // calculate angle
-            find_angle(model_input->data.f, input_length);
-            num++;
-            break;
-          case 1:
-            printf("%d: Slope\n", num);
-            // calculate angle
-            find_angle(model_input->data.f, input_length);
-            num++;
-            break;
-          case 2:
-            printf("%d: Left to Right\n", num);
-            // calculate angle
-            find_angle(model_input->data.f, input_length);
-            num++;
-            break;
-          default:
-            break;
-        }
-        if(num > 10)
+        MQTT::Message message;
+        char buff[100];
+        sprintf(buff, "The %d time(s)", num);
+        message.qos = MQTT::QOS0;
+        message.retained = false;
+        message.dup = false;
+        message.payload = (void *)buff;
+        message.payloadlen = strlen(buff) + 1;
+        int rc = client->publish(topic, message);
+
+        printf("rc:  %d\r\n", rc);
+        printf("Puslish message: %s\r\n", buff);
+
+        if (num >= 5)
         {
           MODE = 0;
         }
-        error_reporter->Report(config.output_message[gesture_index]);
+        
       }
     }
     else
@@ -374,97 +364,89 @@ void messageArrived(MQTT::MessageData &md)
 // WIFI model
 void WIFI_MQTT()
 {
-  /*---- WIFI CONNECTION ----*/
-  wifi = WiFiInterface::get_default_instance();
-  if (!wifi)
-  {
-    printf("ERROR: No WiFiInterface found.\r\n");
-    return;
-  }
+  /*--------WIFI--------*/
+   wifi = WiFiInterface::get_default_instance();
+   if (!wifi)
+   {
+      printf("ERROR: No WiFiInterface found.\r\n");
+      return;
+   }
 
-  printf("\nConnecting to %s...\r\n", MBED_CONF_APP_WIFI_SSID);
-  int ret = wifi->connect(MBED_CONF_APP_WIFI_SSID, MBED_CONF_APP_WIFI_PASSWORD, NSAPI_SECURITY_WPA_WPA2);
-  if (ret != 0)
-  {
-    printf("\nConnection error: %d\r\n", ret);
-    return;
-  }
+   printf("\nConnecting to %s...\r\n", MBED_CONF_APP_WIFI_SSID);
+   int ret = wifi->connect(MBED_CONF_APP_WIFI_SSID, MBED_CONF_APP_WIFI_PASSWORD, NSAPI_SECURITY_WPA_WPA2);
+   if (ret != 0)
+   {
+      printf("\nConnection error: %d\r\n", ret);
+      return;
+   }
 
+   NetworkInterface *net = wifi;
+   MQTTNetwork mqttNetwork(net);
+   MQTT::Client<MQTTNetwork, Countdown> client(mqttNetwork);
 
-  /*---- MQTT ----*/
-  NetworkInterface *net = wifi;
-  MQTTNetwork mqttNetwork(net);
-  MQTT::Client<MQTTNetwork, Countdown> client(mqttNetwork);
+   //TODO: revise host to your IP
+   const char *host = "172.20.10.5";
+   printf("Connecting to TCP network...\r\n");
 
-  // TODO: revise host to your IP
-  const char *host = "172.20.10.5";
-  printf("Connecting to TCP network...\r\n");
+   SocketAddress sockAddr;
+   sockAddr.set_ip_address(host);
+   sockAddr.set_port(1883);
 
-  SocketAddress sockAddr;
-  sockAddr.set_ip_address(host);
-  sockAddr.set_port(1883);
+   printf("address is %s/%d\r\n", (sockAddr.get_ip_address() ? sockAddr.get_ip_address() : "None"), (sockAddr.get_port() ? sockAddr.get_port() : 0)); //check setting
 
-  printf("address is %s/%d\r\n", (sockAddr.get_ip_address() ? sockAddr.get_ip_address() : "None"), (sockAddr.get_port() ? sockAddr.get_port() : 0)); //check setting
+   int rc = mqttNetwork.connect(sockAddr); //(host, 1883);
+   if (rc != 0)
+   {
+      printf("Connection error.");
+      return;
+   }
+   printf("Successfully connected!\r\n");
 
-  int rc = mqttNetwork.connect(sockAddr); //(host, 1883);
-  if (rc != 0)
-  {
-    printf("Connection error.");
-    return;
-  }
-  printf("Successfully connected!\r\n");
+   MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
+   data.MQTTVersion = 3;
+   data.clientID.cstring = "Mbed";
 
-  MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
-  data.MQTTVersion = 3;
-  data.clientID.cstring = "Mbed";
+   if ((rc = client.connect(data)) != 0)
+   {
+      printf("Fail to connect MQTT\r\n");
+   }
+   if (client.subscribe(topic, MQTT::QOS0, messageArrived) != 0)
+   {
+      printf("Fail to subscribe\r\n");
+   }
 
-  if ((rc = client.connect(data)) != 0)
-  {
-    printf("Fail to connect MQTT\r\n");
-  }
-  if (client.subscribe(topic, MQTT::QOS0, messageArrived) != 0)
-  {
-    printf("Fail to subscribe\r\n");
-  }
+   mqtt_thread.start(callback(&mqtt_queue, &EventQueue::dispatch_forever));
+   //btn.rise(mqtt_queue.event(&publish_message, &client));
+   CAPTURE_thread.start(callback(&CAPTURE, &client));
+   //.start(callback(&G_UI, &client));
 
-  /* ---- Change ---- */
+   int num = 0;
+   while (num != 5)
+   {
+      client.yield(100);
+      ++num;
+   }
+   /*-------------WIFI CLOSE------------*/
+   while (1)
+   {
+      if (closed)
+         break;
+      client.yield(500);
+      ThisThread::sleep_for(500ms);
+   }
+   printf("Ready to close MQTT Network......\n");
 
-  // MQTT thread
-  mqtt_thread.start(callback(&mqtt_queue, &EventQueue::dispatch_forever));
+   if ((rc = client.unsubscribe(topic)) != 0)
+   {
+      printf("Failed: rc from unsubscribe was %d\n", rc);
+   }
+   if ((rc = client.disconnect()) != 0)
+   {
+      printf("Failed: rc from disconnect was %d\n", rc);
+   }
 
-  // detection(capture) mode thread
-  DETECTION_thread.start(callback(&CAPTURE, &client));
-
-  int num = 0;
-  while (num != 5)
-  {
-    client.yield(100);
-    ++num;
-  }
-
-  // wifi main loop
-  while (1)
-  {
-    if (!mqtt_flag)
-    {
-      break;
-    } 
-    client.yield(500);
-    ThisThread::sleep_for(500ms);
-  }
-
-  printf("Ready to close MQTT Network......\n");
-
-  if ((rc = client.unsubscribe(topic)) != 0)
-  {
-    printf("Failed: rc from unsubscribe was %d\n", rc);
-  }
-  if ((rc = client.disconnect()) != 0)
-  {
-    printf("Failed: rc from disconnect was %d\n", rc);
-  }
-  mqttNetwork.disconnect();
-  printf("Successfully closed!\n");
+   mqttNetwork.disconnect();
+   printf("Successfully closed!\n");
 
 }
 
