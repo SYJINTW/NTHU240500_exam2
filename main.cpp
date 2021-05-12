@@ -5,7 +5,7 @@
 #include "math.h"
 #include "mbed.h"
 
-// for gesture
+// Gesture
 #include "accelerometer_handler.h"
 #include "magic_wand_model_data.h"
 
@@ -17,18 +17,18 @@
 #include "tensorflow/lite/schema/schema_generated.h"
 #include "tensorflow/lite/version.h"
 
-// for uLCD
+// uLCD
 #include "uLCD_4DGL.h"
 
-// for WIFI & MQTT
+// WIFI & MQTT
 #include "MQTTNetwork.h"
 #include "MQTTmbed.h"
 #include "MQTTClient.h"
 
-// for RPC
+// RPC
 #include "mbed_rpc.h"
 
-// for tilt angle
+// Tilt angle
 #include "stm32l475e_iot01_accelero.h"
 
 
@@ -66,20 +66,22 @@ float angle = 0;
 bool mqtt_flag = true;
 int16_t PDataXYZ[3] = {0};
 int16_t gDataXYZ[3] = {0};
+int Axis[3];
 int num = 0; // event number
+int feature = 0;
+int mfData[300] = {0};
 
 // for gesture
 constexpr int kTensorArenaSize = 60 * 1024;
 uint8_t tensor_arena[kTensorArenaSize];
-
 
 /* ---- uLCD ---- */
 uLCD_4DGL uLCD(D1, D0, D2);
 
 /* ---- LED ---- */
 DigitalOut led1(LED1); // GUI MODE
-DigitalOut led2(LED2); // DETECTION MODE
-DigitalOut led3(LED3);
+DigitalOut led2(LED2); // CAPTURE MODE
+//DigitalOut led3(LED3);
 
 /* ---- INTERRUPT ---- */
 InterruptIn btn(USER_BUTTON);
@@ -94,8 +96,9 @@ const char* topic = "Mbed";
 /* ---- RPC ---- */
 // insert function define
 void MODESelect(Arguments *in, Reply *out);
+void CC(Arguments *in, Reply *out);
 
-RPCFunction rpcLoop(&MODESelect, "MODESelect");
+RPCFunction rpcLoop(&CC, "CC");
 BufferedSerial pc(USBTX, USBRX);
 
 /* ---- THREAD ---- */
@@ -103,9 +106,32 @@ Thread GUI_thread(osPriorityNormal, 8 * 1024);
 Thread DETECTION_thread(osPriorityNormal);
 Thread WIFI_MQTT_thread(osPriorityHigh);
 Thread mqtt_thread(osPriorityHigh);
+Thread CAPTURE_thread(osPriorityNormal);
 EventQueue mqtt_queue;
 
 /* ---- FUNCTION ---- */
+// CC selection
+void CC(Arguments *in, Reply *out)
+{
+  int input_mode = in->getArg<int>();
+  char buffer[200];
+  printf("PRESENT MODE = %d\n", MODE);
+  if(input_mode == 0 || input_mode == 1)
+  {
+    MODE = input_mode;
+    if (input_mode == 0)
+    {
+      sprintf(buffer, "SAFE MODE");
+    }
+    else
+    {
+      sprintf(buffer, "CAPTURE MODE");
+    }
+  }
+  printf("NEW MODE = %d\n", MODE);
+  out->putData(buffer);
+}
+
 // for predicting gesture
 int PredictGesture(float* output) {
   // How many times the most recent gesture has been matched in a row
@@ -146,10 +172,38 @@ int PredictGesture(float* output) {
   return this_predict;
 }
 
-// GUI mode
-void GUI()
+void find_angle(float* input, int length)
 {
+  memset(mfData, 0, 300 * sizeof(int));
+  long int dotproduct = 0;
+  long int normA = 0;
+  long int normg = 0;
+  
+  // get XYZ data
+  int count = 0;
+  for (int i = 0; i < length; i+=3)
+  {
+    gDataXYZ[0] = input[i];
+    gDataXYZ[1] = input[i+1];
+    gDataXYZ[2] = input[i+2];
 
+    for (int i = 0; i < 3; i++)
+    {
+      dotproduct += gDataXYZ[i] * Axis[i];
+      normA += Axis[i] * Axis[i];
+      normg += gDataXYZ[i] * gDataXYZ[i];
+    }
+    // calculate the angle by dot
+    float cosvalue = dotproduct / sqrt(normg) / sqrt(normA);
+    angle = acos(cosvalue) * 180 / 3.1415926;
+    if(angle >= 30) mfData[count++] = 1;
+    else mfData[count++] = 0;
+  }
+}
+
+// CAPTURE mode
+void CAPTURE()
+{
   // Whether we should clear the buffer next time we fetch data
   bool should_clear_buffer = false;
   bool got_data = false;
@@ -228,7 +282,7 @@ void GUI()
   while (true) {
     if(MODE == 1)
     {
-      led1 = 1;
+      led1 = 1; // show start capture mode
 
       // Attempt to read new data from the accelerometer
       got_data = ReadAccelerometer(error_reporter, model_input->data.f,
@@ -254,29 +308,40 @@ void GUI()
       // Clear the buffer next time we read data
       should_clear_buffer = gesture_index < label_num;
 
+      
+
       // Produce an output
       if (gesture_index < label_num)
       {
         switch (gesture_index)
         {
+
+          case 0:
+            printf("%d: Ring\n", num);
+            // calculate angle
+            find_angle(model_input->data.f, input_length);
+            num++;
+            break;
+          case 1:
+            printf("%d: Slope\n", num);
+            // calculate angle
+            find_angle(model_input->data.f, input_length);
+            num++;
+            break;
           case 2:
-            threshold += 5;
-            if (threshold > 90)
-            {
-              threshold = 30;
-            }
+            printf("%d: Left to Right\n", num);
+            // calculate angle
+            find_angle(model_input->data.f, input_length);
+            num++;
             break;
           default:
-            threshold = threshold;
             break;
         }
-        //printf("Gesture index: %d\n", gesture_index); // 1 is the gesture_index we want to change tile
-        //printf("tile: %d\n", threshold);
-        //error_reporter->Report(config.output_message[gesture_index]);
-        
-        // Use uLCD to show the threshold
-        uLCD.locate(1, 3);
-        uLCD.printf("%d", threshold);
+        if(num > 10)
+        {
+          MODE = 0;
+        }
+        error_reporter->Report(config.output_message[gesture_index]);
       }
     }
     else
@@ -286,100 +351,10 @@ void GUI()
   }
 }
 
-// init uLCD display
-void init_uLCD_display()
-{
-  uLCD.cls();
-  uLCD.locate(1, 2);
-  uLCD.printf("A:");
-  uLCD.locate(1, 3);
-  uLCD.printf("%d", threshold);
-  uLCD.locate(1, 6);
-  uLCD.printf("B:");
-  uLCD.locate(1, 7);
-  uLCD.printf("X\n");
-}
-
 // close MQTT
 void close_MQTT()
 {
   mqtt_flag = false;
-}
-
-// tilt angle
-void tilt_angle(MQTT::Client<MQTTNetwork, Countdown> *client)
-{
-  BSP_ACCELERO_Init();
-  BSP_ACCELERO_AccGetXYZ(gDataXYZ);
-
-  // get init X Y Z as the base line
-  int Axis[3];
-  for (int i = 0; i < 3; i++)
-  {
-    Axis[i] = gDataXYZ[i];
-  }
-  
-  // start detection
-  while (1)
-  {
-    if (MODE == 2)
-    {
-      led2 = 1;
-
-      long int dotproduct = 0;
-      long int normA = 0;
-      long int normg = 0;
-      
-      // get XYZ data
-      BSP_ACCELERO_AccGetXYZ(gDataXYZ);
-      for (int i = 0; i < 3; i++)
-      {
-        dotproduct += gDataXYZ[i] * Axis[i];
-        normA += Axis[i] * Axis[i];
-        normg += gDataXYZ[i] * gDataXYZ[i];
-      }
-
-      // calculate the angle by dot
-      float cosvalue = dotproduct / sqrt(normg) / sqrt(normA);
-      angle = acos(cosvalue) * 180 / 3.1415926;
-      
-      // change uLCD display
-      uLCD.locate(1, 7);
-      uLCD.printf("%-4.1f", angle);
-      ThisThread::sleep_for(250ms);
-
-      // difference as 5 degree
-      if (angle < 5)
-      {
-        led3 = !led3; // led spark means still on table
-      }
-      if (angle >= threshold && num < 5)
-      {
-        num++;
-
-        MQTT::Message message;
-        char buff[100];
-        sprintf(buff, "The %d time(s)", num);
-        message.qos = MQTT::QOS0;
-        message.retained = false;
-        message.dup = false;
-        message.payload = (void *)buff;
-        message.payloadlen = strlen(buff) + 1;
-        int rc = client->publish(topic, message);
-
-        printf("rc:  %d\r\n", rc);
-        printf("Puslish message: %s\r\n", buff);
-        if (num >= 5)
-        {
-            MODE = 0;
-        }
-      }
-    }
-    else
-    {
-      led2 = 0;
-    }
-  }
 }
 
 // collect message
@@ -394,48 +369,6 @@ void messageArrived(MQTT::MessageData &md)
    sprintf(payload, "Payload %.*s\r\n", message.payloadlen, (char *)message.payload);
    printf(payload);
    ++arrivedcount;
-}
-
-// MODE selection
-void MODESelect(Arguments *in, Reply *out)
-{
-  int input_mode = in->getArg<int>();
-  char buffer[200];
-  printf("PRESENT MODE = %d\n", MODE);
-  MODE = input_mode;
-  if (input_mode == 1)
-  {
-    sprintf(buffer, "UI MODE");
-  }
-  else if (input_mode == 2)
-  {
-    sprintf(buffer, "DETECTION MODE");
-  }
-  else
-  {
-    sprintf(buffer, "SAFE MODE");
-  }
-  printf("NEW MODE = \n", MODE);
-  out->putData(buffer);
-}
-
-// after interrupt
-void publish_message(MQTT::Client<MQTTNetwork, Countdown> *client)
-{
-   message_num++;
-   MQTT::Message message;
-   char buff[100];
-   sprintf(buff, "Angle threshold is %d", threshold);
-   message.qos = MQTT::QOS0;
-   message.retained = false;
-   message.dup = false;
-   message.payload = (void *)buff;
-   message.payloadlen = strlen(buff) + 1;
-   int rc = client->publish(topic, message);
-
-   printf("rc: %d\r\n", rc);
-   printf("Puslish message: %s\r\n", buff);
-   MODE = 0;
 }
 
 // WIFI model
@@ -464,7 +397,7 @@ void WIFI_MQTT()
   MQTT::Client<MQTTNetwork, Countdown> client(mqttNetwork);
 
   // TODO: revise host to your IP
-  const char *host = "192.168.0.24";
+  const char *host = "172.20.10.5";
   printf("Connecting to TCP network...\r\n");
 
   SocketAddress sockAddr;
@@ -494,16 +427,14 @@ void WIFI_MQTT()
     printf("Fail to subscribe\r\n");
   }
 
+  /* ---- Change ---- */
+
   // MQTT thread
   mqtt_thread.start(callback(&mqtt_queue, &EventQueue::dispatch_forever));
 
-  // button interrupt -> run publish_message to client
-  btn.rise(mqtt_queue.event(&publish_message, &client));
+  // detection(capture) mode thread
+  DETECTION_thread.start(callback(&CAPTURE, &client));
 
-  // detection mode thread
-  DETECTION_thread.start(callback(&tilt_angle, &client));
-
-  // 
   int num = 0;
   while (num != 5)
   {
@@ -534,6 +465,7 @@ void WIFI_MQTT()
   }
   mqttNetwork.disconnect();
   printf("Successfully closed!\n");
+
 }
 
 int main(int argc, char* argv[])
@@ -542,21 +474,21 @@ int main(int argc, char* argv[])
   char buf[256], outbuf[256];
   FILE *devin = fdopen(&pc, "r");
   FILE *devout = fdopen(&pc, "w");
-
-
-  // init uLCD display
-  init_uLCD_display();
   
-  // init Accelerometer
+  // init acceler
   BSP_ACCELERO_Init();
+  BSP_ACCELERO_AccGetXYZ(gDataXYZ);
 
-  // start GUI thread
-  GUI_thread.start(GUI);
-
+  // get init X Y Z as the base line
+  for (int i = 0; i < 3; i++)
+  {
+    Axis[i] = gDataXYZ[i];
+  }
+  
   // start WIFI thread
   WIFI_MQTT_thread.start(&WIFI_MQTT);
 
-
+  
   // main while
   while(1)
   {
@@ -574,5 +506,6 @@ int main(int argc, char* argv[])
     RPC::call(buf, outbuf);
     printf("%s\r\n", outbuf);
   }
+  
   return 0;
 }

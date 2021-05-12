@@ -28,7 +28,7 @@ def on_message(mosq, obj, msg):
         s.write(bytes("\r", 'UTF-8'))
         time.sleep(1)
         
-        s.write(bytes("/mode_sl/run 3\r", 'UTF-8'))
+        s.write(bytes("/CC/run 1\r", 'UTF-8'))
         time.sleep(1)
     elif len(str(msg.payload)) < 21:
         if count >= 5:
@@ -38,7 +38,7 @@ def on_message(mosq, obj, msg):
             s.write(bytes("\r", 'UTF-8'))
             time.sleep(1)
             
-            s.write(bytes("/mode_sl/run 3\r", 'UTF-8'))
+            s.write(bytes("/CC/run 1\r", 'UTF-8'))
             time.sleep(1)
         else:
             print("[Received] Topic: " + msg.topic + ", Message: " + str(msg.payload) + "\n")

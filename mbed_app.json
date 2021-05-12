@@ -3,12 +3,12 @@
     "wifi-ssid": {
             "help": "WiFi SSID",
             "//": "TODO: wifi name",
-            "value": "\"SYJ_TLink2\""
+            "value": "\"Phantom_Wu\""
     },
     "wifi-password": {
             "help": "WiFi Password",
             "//": "TODO: wifi password",
-            "value": "\"44444444\""
+            "value": "\"19910329\""
     }
     },
     "target_overrides": {

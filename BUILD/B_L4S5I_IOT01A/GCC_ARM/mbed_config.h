@@ -56,8 +56,8 @@
 #define LPTICKER_DELAY_TICKS                                                    0                                                                                                // set by target:MCU_STM32L4
 #define MBED_CONF_ALT1250_PPP_BAUDRATE                                          115200                                                                                           // set by library:ALT1250_PPP
 #define MBED_CONF_ALT1250_PPP_PROVIDE_DEFAULT                                   0                                                                                                // set by library:ALT1250_PPP
-#define MBED_CONF_APP_WIFI_PASSWORD                                             "44444444"                                                                                       // set by application
-#define MBED_CONF_APP_WIFI_SSID                                                 "SYJ_TLink2"                                                                                     // set by application
+#define MBED_CONF_APP_WIFI_PASSWORD                                             "19910329"                                                                                       // set by application
+#define MBED_CONF_APP_WIFI_SSID                                                 "Phantom_Wu"                                                                                     // set by application
 #define MBED_CONF_ATMEL_RF_ASSUME_SPACED_SPI                                    1                                                                                                // set by library:atmel-rf[STM]
 #define MBED_CONF_ATMEL_RF_FULL_SPI_SPEED                                       7500000                                                                                          // set by library:atmel-rf
 #define MBED_CONF_ATMEL_RF_FULL_SPI_SPEED_BYTE_SPACING                          250                                                                                              // set by library:atmel-rf
